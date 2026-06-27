@@ -27,7 +27,7 @@ from admin_base import AdminView
 
 from auth import AdminAuthenticator
 from database import (
-    ConcertSchedule, TourSchedule, db, Concert, Place, Address, Ticket,
+    Album, BoardMessage, ConcertSchedule, PageDescription, Tour, TourSchedule, db, Concert, Place, Address, Ticket,
     MusicChannels, Socials, Profile, Contact
 )
 
@@ -37,8 +37,30 @@ from wtforms import (
 
 from forms import ConcertScheduleForm, ProfileForm, TicketForm
 from validators import FormValidators
-    
 
+
+
+from flask_admin import BaseView, expose
+
+class PreviewView(BaseView):
+    def __init__(self, name="Preview", endpoint="preview", **kwargs):
+        super().__init__(name=name, endpoint=endpoint, **kwargs)
+
+    @expose('/')
+    def preview(self, **kwargs):
+        profile = Profile.query.first()
+        albums = Album.query.all()
+        tours = Tour.query.all()
+        board_messages = BoardMessage.query.order_by(BoardMessage.created_at.desc()).all()
+        page_description = PageDescription.query.first()
+        return self.render(
+            'admin/preview.html',
+            profile=profile,
+            albums=albums,
+            tours=tours,
+            board_messages=board_messages,
+            page_description=page_description
+        )
     
 class ProfileAdmin(AdminView):
     form_base_class = ProfileForm
@@ -780,8 +802,8 @@ class TourAdmin(AdminView):
     form_columns = ['name', 'description', 'startdate', 'enddate', 'concerts']
 
     form_extra_fields = {
-        'startdate': DateField('Start Date', validators=[DataRequired()]),
-        'enddate': DateField('End Date', validators=[DataRequired()]),
+        'startdate': DateField('Start Date', format='%Y-%m-%d', validators=[DataRequired()]),
+        'enddate': DateField('End Date', format='%Y-%m-%d', validators=[DataRequired()]),
         'concerts': SelectMultipleField(
             'Concerts',
             coerce=int,
@@ -826,11 +848,19 @@ class TourAdmin(AdminView):
     def edit_form(self, obj=None):
         form = super().edit_form(obj)
         self._set_concert_choices(form, obj)
+
         if obj and obj.tour_schedule:
-            form.startdate.data = obj.tour_schedule.startdate
-            form.enddate.data = obj.tour_schedule.enddate
+            print(form.startdate.data)
+            print(form.enddate.data)
+            if not request.form:
+                form.startdate.data = obj.tour_schedule.startdate
+                form.enddate.data = obj.tour_schedule.enddate
+                print(form.startdate.data)
+                print(form.enddate.data)
+            
         if obj:
             form.concerts.data = [c.id for c in obj.concerts]
+        
         return form
 
     # --- Create model manuale ---
@@ -875,6 +905,11 @@ class TourAdmin(AdminView):
             if not self.validate_model(model, form):
                 return False
             
+
+            print("Form raw:", request.form)
+            print("Form parsed startdate:", form.startdate.data)
+            print("Form parsed enddate:", form.enddate.data)
+
             startdate = form.startdate.data
             enddate = form.enddate.data
 
@@ -882,11 +917,17 @@ class TourAdmin(AdminView):
             model.description = form.description.data
 
             if model.tour_schedule:
+                print('Update - Model Values')
                 model.tour_schedule.startdate = startdate
                 model.tour_schedule.enddate = enddate
+                print(model.tour_schedule.startdate)
+                print(model.tour_schedule.enddate)
             else:
+                print('Create')
                 ts = TourSchedule(startdate=startdate, enddate=enddate)
                 model.tour_schedule = ts
+                print(model.tour_schedule.startdate)
+                print(model.tour_schedule.enddate)
                 self.session.add(ts)
             
             selected_ids = request.form.getlist('concerts')

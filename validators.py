@@ -132,5 +132,5 @@ class FormValidators:
             raise ValidationError(f"{field_name} cannot contain HTML or SQL")
         length = len(value.strip()) if value else 0
         # Qui 0 è accettato → campo opzionale
-        if length > 250:
+        if length > 500:
             raise ValidationError(f"{field_name} cannot exceed 250 characters")

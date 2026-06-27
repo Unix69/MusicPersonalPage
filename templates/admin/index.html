@@ -1,0 +1,117 @@
+{% extends 'admin/master.html' %}
+
+{% block body %}
+<div class="container-fluid">
+    <h1>Admin Dashboard</h1>
+    <p></p>
+
+    <ul>
+        {% for view in admin_views %}
+        <li>
+            <a href="{{ view.url }}">{{ view.name }}</a>
+        </li>
+        {% endfor %}
+    </ul>
+
+    <div class="alert alert-info" style="margin:20px; padding:20px; border-radius:10px; background:#f8f9fa; border:1px solid #ddd;">
+        <h2>🎶 Welcome to the Administration Panel</h2>
+        <p>This panel allows you to manage the website’s musical content and data. The main available operations are:</p>
+        <ul>
+            <li><b>➕ Add records</b>: use the <i>Create</i> button in the section list.</li>
+            <li><b>✏️ Edit records</b>: click <i>Edit</i> next to the item to update.</li>
+            <li><b>🗑️ Delete records</b>: click <i>Delete</i> (note: if a record is linked by relations, the model’s <code>cascade</code> rules will apply).</li>
+        </ul>
+        <hr>
+
+        <h3>📂 Available Sections</h3>
+        <ul>
+            <li><b>👤 Profile</b>: main info (name, bio, image, contacts, socials, music channels). <i>Note:</i> each profile can have only one <code>Contact</code>, <code>MusicChannels</code>, and <code>Socials</code> record (1–1 relation with <code>unique=True</code>).</li>
+            <li><b>💿 Album</b>: title, description, cover image, links (Spotify, YouTube, Apple). <i>Tip:</i> links must belong to authorized domains.</li>
+            <li><b>📜 Board Messages</b>: news or updates with automatic <code>created_at</code>.</li>
+            <li><b>📄 Page Description</b>: main site text, only one record allowed.</li>
+            <li><b>🏠 Address</b>: full address, reusable by <b>Places</b>. <i>Tip:</i> validate CAP (numeric only, max 10 characters) and street number.</li>
+            <li><b>📍 Place</b>: venue name, linked address, Google Maps link. <i>Note:</i> one place may host multiple concerts.</li>
+            <li><b>🎟️ Tickets</b>: a ticket may be free (<code>is_free</code>) or have a unique link. <i>Note:</i> 1–1 relation with concert (<code>unique=True</code>).</li>
+            <li><b>📅 Concert Schedule</b>: date and times. <i>Rule:</i> start time must be before end time. No overlapping concerts allowed in the same place.</li>
+            <li><b>🎤 Concerts</b>: link <b>Place</b>, <b>Ticket</b>, <b>Schedule</b>, optionally a <b>Tour</b>. <i>Note:</i> you cannot assign two tickets to the same concert.</li>
+            <li><b>🗺️ Tours</b>: name, description, linked concerts. <i>Rule:</i> <code>TourSchedule</code> must contain all dates of associated concerts.</li>
+        </ul>
+        <hr>
+
+        <h3>🛡️ Validation Rules</h3>
+        <ul>
+            <li><b>Text (name, bio, descriptions)</b>: min/max length; HTML and SQL not allowed (<code>FormValidators.no_html</code>, <code>FormValidators.no_sql</code>).</li>
+            <li><b>Email</b>: must have valid email format.</li>
+            <li><b>Phone</b>: digits only (7–15), optional leading “+”.</li>
+            <li><b>Links</b>: must be <code>http://</code> or <code>https://</code>, validated against allowed domains (Spotify, YouTube, Apple, Facebook, Instagram, Google Maps).</li>
+            <li><b>Image files</b>: only <code>.jpg</code>, <code>.png</code>, <code>.gif</code>.</li>
+            <li><b>Ticket</b>: unique link if provided. Only one ticket per concert.</li>
+            <li><b>Concert Schedule</b>: date required, start/end times consistent.</li>
+            <li><b>Tour</b>: start date ≤ end date.</li>
+        </ul>
+        <hr>
+
+            <!-- Software License -->
+        <section id="software-license">
+            <h3>💻 Software License</h3>
+            <p>
+            The software of this website is licensed under the 
+            <a href="{{ url_for('static', filename='LICENSE_SOFTWARE.txt') }}" target="_blank">MIT License</a>.
+            You are free to use, copy, modify, merge, publish, distribute, sublicense, 
+            and/or sell copies of the software, under the conditions of the MIT License.
+            </p>
+        </section>
+
+        <hr>
+
+        <!-- Content License -->
+        <section id="content-license">
+            <h3>📝 Content License</h3>
+            <p>
+            The content of this website (text, images, media) is licensed under the 
+            <a href="{{ url_for('static', filename='LICENSE_CONTENT.txt') }}" target="_blank">MIT License</a>.
+            You are free to use, copy, modify, and share the content, with attribution 
+            if required, under the terms of the license.
+            </p>
+        </section>
+
+        <hr>
+
+        <!-- GDPR / Privacy Policy -->
+        <section id="privacy-policy">
+            <h3>🛡️ Privacy / GDPR</h3>
+            <p>
+            This website does not collect or store any personal data from its visitors. 
+            No cookies are used for tracking or advertising purposes.
+            </p>
+            <p>
+            If you contact us via email or any future forms, any personal data provided 
+            will only be used to respond to your inquiries and will be stored securely 
+            according to GDPR regulations.
+            </p>
+        </section>
+
+        <hr>
+        <p><b>ℹ️ Practical tip:</b> In Flask-Admin, each section displays a record list. Use <i>Create</i> to add new data, <i>Edit</i> to update, and <i>Delete</i> to remove. If a field is required or invalid, a red error message will appear.</p>
+        </div>
+
+
+        <footer class="admin-footer" style="
+            background:#f1f1f1;
+            border-top:1px solid #ddd;
+            padding:15px 20px;
+            text-align:center;
+            font-size:0.9em;
+            color:#555;
+            width:100%;
+            box-shadow: 0 -2px 5px rgba(0,0,0,0.05);">
+        <div  style="align-self: center;">
+            🎵 Admin Panel &copy; 2025 MusicSite. All Rights Reserved.
+        </div>
+        <div style="align-self: center; margin-top:5px; font-size:0.8em; color:#888;">
+            Powered by Flask & SQLAlchemy
+        </div>
+        </footer>
+    
+</div>
+{% endblock %}

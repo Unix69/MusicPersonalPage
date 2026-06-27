@@ -184,7 +184,7 @@
                 <div class="profile-bio-container">
                     <!-- Bio a sinistra -->
                     <div class="profile-bio">
-                        <h3>About the Artist</h3>
+                        <h3>Paul Robino</h3>
                         <p>{{ profile.bio }}</p>
                     </div>
 
@@ -201,7 +201,6 @@
             <!-- Page Description -->
             {% if page_description %}
             <div class="mb-4 page-description-container">
-                <h2><strong>Page Description</strong></h2>
                 <p>{{ page_description.content }}</p>
             </div>
             {% endif %}
@@ -209,7 +208,6 @@
             <!-- Albums Section -->
             <div id="albums" class="albums-card">
                 <h2><strong>Albums</strong></h2>
-                <p>This section presents all of her published albums. Each recording includes a description and can be listened to through Spotify, YouTube, or Apple Music. Albums are also available for sharing with friends and followers.</p>
                 <div class="albums-scroll accordion" id="albumsAccordion">
                     {% for album in albums %}
                     <div class="album-wrapper mb-3">
@@ -308,7 +306,6 @@
             <!-- Tours Section -->
             <div id="tours" class="tours-card">
                 <h2><strong>Tours</strong></h2>
-                <p>Here visitors can explore all her concert tours. Each tour provides details about every stop: dates, cities, venues, and countries visited. It is also possible to check ticket availability, plan attendance, and revisit the roadmaps of past tours.</p>
                 <div class="tours-scroll accordion" id="toursAccordion">
                 {% for tour in tours %}
                     <div class="accordion-item mb-3">
@@ -538,8 +535,8 @@
                         </div>
                     </div>
                 {% endfor %}
+
                 </div>
-                
                 {% set countries = [] %}
                 {% set cities = [] %}
 
@@ -555,7 +552,7 @@
                 {% endfor %}
 
                 {% if countries %}
-                <p class="text-muted mb-3">
+                <p class="mb-3">
                     Performed in 
                     <strong>{{ cities|length }}</strong> 
                     {{ "different cities" if cities|length > 1 else "city" }}
@@ -570,9 +567,8 @@
                     {% endfor %}
                 </p>
                 {% else %}
-                <p class="text-muted">No concerts registered for any tour.</p>
+                <p class="mb-3">No concerts registered for any tour.</p>
                 {% endif %}
-                </div>
             </div>
 
 
@@ -581,7 +577,6 @@
             <!-- Info News -->
             <div id="news" class="news">
                 <h2><strong>News</strong></h2>
-                <p style="margin-top: 24px;">This section features the latest news, announcements, and personal messages from the artist. It keeps the audience informed about upcoming events, new recordings, and behind-the-scenes insights.</p>
                 <div class="board-container">
                     {% for msg in board_messages %}
                     <div class="board-message">
@@ -595,8 +590,6 @@
             </div>
 
 
-
-
             <footer id="contacts" class="site-footer">
                 <p style="text-align: center; margin-top: 24px; margin-bottom: 36px;">All official contact details can be found here. Visitors may reach out via email or phone for artistic collaborations, invitations, or inquiries. Official social media channels are also provided to stay connected.<p>
                 <!-- Riga 1: Contenuto -->
@@ -608,11 +601,11 @@
 
                     <!-- Riga 2: Telefono + Email -->
                     <div class="footer-contacts">
-                        <a href="tel:+391234567890" class="footer-contact">
+                        <a href="tel:{{ profile.contact.phone }}" class="footer-contact">
                             <i class="bi bi-telephone"></i>
                             <span>{{ profile.contact.phone }}</span>
                         </a>
-                        <a href="mailto:email@example.com" class="footer-contact">
+                        <a href="mailto:{{ profile.contact.email }}" class="footer-contact">
                             <i class="bi bi-envelope"></i>
                             <span>{{ profile.contact.email }}</span>
                         </a>
@@ -624,17 +617,29 @@
                     <ul class="social-links">
                         <li><a href="{{ profile.socials.facebook_link }}" target="_blank"><i class="bi bi-facebook"></i> Facebook</a></li>
                         <li><a href="{{ profile.socials.instagram_link }}" target="_blank"><i class="bi bi-instagram"></i> Instagram</a></li>
-                        <li><a href="{{ profile.socials.youtube_link }}" target="_blank"><i class="bi bi-youtube"></i> YouTube</a></li>
-                        <li><a href="{{ profile.socials.spotify_link }}" target="_blank"><i class="bi bi-spotify"></i> Spotify</a></li>
-                        <li><a href="{{ profile.socials.applemusic_link }}" target="_blank"><i class="bi bi-music-note-beamed"></i> Apple Music</a></li>
+                        <li><a href="{{ profile.music_channels.youtube_link }}" target="_blank"><i class="bi bi-youtube"></i> YouTube</a></li>
+                        <li><a href="{{ profile.music_channels.spotify_link }}" target="_blank"><i class="bi bi-spotify"></i> Spotify</a></li>
+                        <li><a href="{{ profile.music_channels.applemusic_link }}" target="_blank"><i class="bi bi-music-note-beamed"></i> Apple Music</a></li>
                     </ul>
                     </div>
                 </div>
                 <!-- Riga 2: Licenza -->
                 <div class="footer-license">
                     © {{ app_license }}
+                    <p style="margin: 24px 16px 24px 16px;">
+                        Privacy / GDPR
+                        This website does not collect or store any personal data from its visitors. 
+                        No cookies are used for tracking or advertising purposes.
+                        </p>
+                        <p>
+                        If you contact us via email or any future forms, any personal data provided 
+                        will only be used to respond to your inquiries and will be stored securely 
+                        according to GDPR regulations.
+                        </p>
                 </div>
             </footer>
+
+
 
 
             {% else %}

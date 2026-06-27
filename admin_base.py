@@ -46,16 +46,4 @@ class AppAdminIndexView(AdminIndexView):
 
     @expose('/')
     def index(self):
-        profile = Profile.query.first()
-        albums = Album.query.all()
-        tours = Tour.query.all()
-        board_messages = BoardMessage.query.order_by(BoardMessage.created_at.desc()).all()
-        page_description = PageDescription.query.first()
-        return self.render(
-            'admin_index.html',
-            profile=profile,
-            albums=albums,
-            tours=tours,
-            board_messages=board_messages,
-            page_description=page_description
-        )
+        return self.render('admin/index.html', admin_views=self.admin._views)

@@ -1,0 +1,372 @@
+{% extends 'admin/master.html' %}
+
+{% block head %}
+    {{ super() }}
+    <style>
+        /* Reset di base */
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background-color: #f8f9fa;
+            color: #212529;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Header */
+        .header-cover {
+            background: linear-gradient(135deg, #6f42c1, #6610f2);
+            color: white;
+            padding: 1rem 2rem;
+        }
+
+        .profile-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .profile-name {
+            font-size: 1.5rem;
+        }
+
+        .profile-contacts img {
+            width: 28px;
+            height: 28px;
+            transition: transform 0.2s;
+        }
+
+        .profile-contacts img:hover {
+            transform: scale(1.1);
+        }
+
+        /* Sidebar menu */
+        .sidebar-menu {
+            display: none;
+            position: absolute;
+            top: 60px;
+            left: 0;
+            background: #343a40;
+            padding: 1rem;
+            border-radius: 0 5px 5px 0;
+        }
+
+        .sidebar-menu.show {
+            display: block;
+        }
+
+        .sidebar-menu ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .sidebar-menu li {
+            margin: 10px 0;
+        }
+
+        .sidebar-menu a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        /* Profile bio */
+        .profile-bio-container {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .profile-img img {
+            max-width: 200px;
+            border-radius: 50%;
+        }
+
+        /* Albums */
+        .albums-card {
+            margin-top: 2rem;
+        }
+
+        .album-cover {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 6px;
+        }
+
+        /* Tours */
+        .tours-card {
+            margin-top: 2rem;
+        }
+
+        /* News board */
+        .board-container {
+            background: white;
+            padding: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+        }
+
+        .board-message {
+            margin-bottom: 1rem;
+            border-bottom: 1px solid #dee2e6;
+            padding-bottom: 0.5rem;
+        }
+
+        .board-message-date {
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+
+        /* Footer */
+        .site-footer {
+            background: #212529;
+            color: white;
+            padding: 2rem;
+            margin-top: 2rem;
+        }
+
+        .footer-grid {
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+        }
+
+        .footer-left,
+        .footer-right {
+            flex: 1 1 300px;
+        }
+
+        .profile-pic {
+            width: 100px;
+            border-radius: 50%;
+            margin-bottom: 1rem;
+        }
+
+        .footer-contacts a {
+            display: block;
+            color: white;
+            margin-bottom: 0.5rem;
+            text-decoration: none;
+        }
+
+        .footer-contacts a:hover {
+            text-decoration: underline;
+        }
+
+        .social-links {
+            list-style: none;
+            padding: 0;
+        }
+
+        .social-links li {
+            margin-bottom: 0.5rem;
+        }
+
+        .social-links a {
+            color: white;
+            text-decoration: none;
+        }
+    </style>
+{% endblock %}
+
+
+
+{% block body %}
+<div class="header-cover">
+{% if profile %}
+    <div class="profile-bar d-flex justify-content-between align-items-center">
+        <div class="sidebar-menu" id="sidebarMenu">
+            <ul>
+                <li><a href="#albums">Albums</a></li>
+                <li><a href="#tours">Tours</a></li>
+                <li><a href="#news">News</a></li>
+                <li><a href="#contacts">Contacts</a></li>
+            </ul>
+        </div>
+        <button class="menu-toggle" onclick="document.getElementById('sidebarMenu').classList.toggle('show')">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="bi bi-music-note-list menu-toggle-icon" viewBox="0 0 16 16">
+                <path d="M12 13c0 1.105-1.12 2-2.5 2S7 14.105 7 13s1.12-2 2.5-2 2.5.895 2.5 2"/>
+                <path fill-rule="evenodd" d="M12 3v10h-1V3z"/>
+                <path d="M11 2.82a1 1 0 0 1 .804-.98l3-.6A1 1 0 0 1 16 2.22V4l-5 1z"/>
+            </svg>
+        </button>
+        <div class="profile-name fw-bold">{{ profile.name }}</div>
+        <div class="profile-contacts d-flex gap-3">
+            {% if profile.music_channels.spotify_link %}<a href="{{ profile.music_channels.spotify_link }}" target="_blank"><img src="{{ url_for('static', filename='icons/spotify.svg') }}" class="social-icon"></a>{% endif %}
+            {% if profile.music_channels.youtube_link %}<a href="{{ profile.music_channels.youtube_link }}" target="_blank"><img src="{{ url_for('static', filename='icons/youtube.svg') }}" class="social-icon"></a>{% endif %}
+            {% if profile.music_channels.applemusic_link %}<a href="{{ profile.music_channels.applemusic_link }}" target="_blank"><img src="{{ url_for('static', filename='icons/apple.svg') }}" class="social-icon"></a>{% endif %}
+            {% if profile.socials.facebook_link %}<a href="{{ profile.socials.facebook_link }}" target="_blank"><img src="{{ url_for('static', filename='icons/facebook.svg') }}" class="social-icon"></a>{% endif %}
+            {% if profile.socials.instagram_link %}<a href="{{ profile.socials.instagram_link }}" target="_blank"><img src="{{ url_for('static', filename='icons/instagram.svg') }}" class="social-icon"></a>{% endif %}
+            {% if profile.contact.email %}<a href="mailto:{{ profile.contact.email }}"><img src="{{ url_for('static', filename='icons/email.svg') }}" class="contact-icon"></a>{% endif %}
+            {% if profile.contact.phone %}<a href="tel:{{ profile.contact.phone }}"><img src="{{ url_for('static', filename='icons/phone.svg') }}" class="contact-icon"></a>{% endif %}
+        </div>
+    </div>
+{% endif %}
+</div>
+
+<div class="id-container mt-0">
+{% if profile %}
+    <!-- About -->
+    <div class="row mb-4 g-3 profile-bio-container">
+        <div class="profile-bio">
+            <h3>About the Artist</h3>
+            <p>{{ profile.bio }}</p>
+        </div>
+        <div class="profile-img">
+            <img src="{{ url_for('static', filename='images/profile/' + profile.profile_image) }}" alt="Profile Image">
+        </div>
+    </div>
+
+    {% if page_description %}
+    <div class="mb-4 page-description-container">
+        <h2><strong>Page Description</strong></h2>
+        <p>{{ page_description.content }}</p>
+    </div>
+    {% endif %}
+
+    <!-- Albums Section -->
+    <div id="albums" class="albums-card">
+        <h2><strong>Albums</strong></h2>
+        <div class="albums-scroll accordion" id="albumsAccordion">
+            {% for album in albums %}
+            <div class="accordion-item album-card mb-3" id="album{{ album.id }}">
+                <h2 class="accordion-header" id="albumHeading{{ loop.index }}">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#albumCollapse{{ loop.index }}" aria-expanded="false">
+                        {% if album.cover_image %}<img src="{{ url_for('static', filename='images/album/' + album.cover_image) }}" class="album-cover me-3">{% endif %}
+                        {{ album.name }}
+                    </button>
+                </h2>
+                <div id="albumCollapse{{ loop.index }}" class="accordion-collapse collapse" data-bs-parent="#albumsAccordion">
+                    <div class="accordion-body d-flex justify-content-between align-items-center flex-wrap">
+                        <div class="col-md-7 p-3">
+                            <h5>{{ album.name }}</h5>
+                            <p>{{ album.description }}</p>
+                            <div class="d-flex justify-content-end gap-2">
+                                {% if album.spotify_link %}<a href="{{ album.spotify_link }}" target="_blank" class="btn btn-outline-primary btn-sm">Spotify</a>{% endif %}
+                                {% if album.youtube_link %}<a href="{{ album.youtube_link }}" target="_blank" class="btn btn-outline-danger btn-sm">YouTube</a>{% endif %}
+                                {% if album.applemusic_link %}<a href="{{ album.applemusic_link }}" target="_blank" class="btn btn-outline-success btn-sm">Apple Music</a>{% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Tours Section -->
+    <div id="tours" class="tours-card">
+        <h2><strong>Tours</strong></h2>
+        <div class="tours-scroll accordion" id="toursAccordion">
+            {% for tour in tours %}
+            <div class="accordion-item mb-3">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#tourCollapse{{ loop.index }}">
+                    {{ tour.name }} {% if tour.tour_schedule %}({{ tour.tour_schedule.startdate.year }} - {{ tour.tour_schedule.enddate.year }}){% endif %}
+                </button>
+                <div id="tourCollapse{{ loop.index }}" class="accordion-collapse collapse" data-bs-parent="#toursAccordion">
+                    <div class="accordion-body">
+                        <p>{{ tour.description }}</p>
+                        {% if tour.concerts %}
+                        <ul class="list-group list-group-flush">
+                            {% for concert in tour.concerts %}
+                            <li class="list-group-item">
+                                {{ concert.place.venue }}, {{ concert.place.address.city }}, {{ concert.place.address.country }}
+                            </li>
+                            {% endfor %}
+                        </ul>
+                        {% else %}
+                        <p class="text-muted">No stops defined.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- News Section -->
+    <div id="news" class="news">
+        <h2><strong>News</strong></h2>
+        <div class="board-container">
+            {% for msg in board_messages %}
+            <div class="board-message">
+                <div class="board-message-date">[{{ msg.created_at.strftime('%d/%m/%Y %H:%M') }}]</div>
+                <div class="board-message-content">{{ msg.content }}</div>
+            </div>
+            {% else %}
+            <p class="text-muted">No messages yet.</p>
+            {% endfor %}
+        </div>
+    </div>
+  
+    <!-- Software License -->
+    <section id="software-license">
+        <h3>💻 Software License</h3>
+        <p>
+        The software of this website is licensed under the 
+        <a href="{{ url_for('static', filename='LICENSE_SOFTWARE.txt') }}" target="_blank">MIT License</a>.
+        You are free to use, copy, modify, merge, publish, distribute, sublicense, 
+        and/or sell copies of the software, under the conditions of the MIT License.
+        </p>
+    </section>
+
+    <hr>
+
+    <!-- Content License -->
+    <section id="content-license">
+        <h3>📝 Content License</h3>
+        <p>
+        The content of this website (text, images, media) is licensed under the 
+        <a href="{{ url_for('static', filename='LICENSE_CONTENT.txt') }}" target="_blank">MIT License</a>.
+        You are free to use, copy, modify, and share the content, with attribution 
+        if required, under the terms of the license.
+        </p>
+    </section>
+
+    <hr>
+
+    <!-- GDPR / Privacy Policy -->
+    <section id="privacy-policy">
+        <h3>🛡️ Privacy / GDPR</h3>
+        <p>
+        This website does not collect or store any personal data from its visitors. 
+        No cookies are used for tracking or advertising purposes.
+        </p>
+        <p>
+        If you contact us via email or any future forms, any personal data provided 
+        will only be used to respond to your inquiries and will be stored securely 
+        according to GDPR regulations.
+        </p>
+    </section>
+
+
+    <!-- Contacts / Footer -->
+    <footer id="contacts" class="site-footer">
+        <div class="footer-grid">
+            <div class="footer-left">
+                <img src="{{ url_for('static', filename='images/profile/' + profile.profile_image) }}" class="profile-pic">
+                <div class="footer-contacts">
+                    <a href="tel:{{ profile.contact.phone }}"><i class="bi bi-telephone"></i> {{ profile.contact.phone }}</a>
+                    <a href="mailto:{{ profile.contact.email }}"><i class="bi bi-envelope"></i> {{ profile.contact.email }}</a>
+                </div>
+            </div>
+            <div class="footer-right">
+                <ul class="social-links">
+                    {% if profile.socials.facebook_link %}<li><a href="{{ profile.socials.facebook_link }}"><i class="bi bi-facebook"></i> Facebook</a></li>{% endif %}
+                    {% if profile.socials.instagram_link %}<li><a href="{{ profile.socials.instagram_link }}"><i class="bi bi-instagram"></i> Instagram</a></li>{% endif %}
+                    {% if profile.music_channels.youtube_link %}<li><a href="{{ profile.music_channels.youtube_link }}"><i class="bi bi-youtube"></i> YouTube</a></li>{% endif %}
+                    {% if profile.music_channels.spotify_link %}<li><a href="{{ profile.music_channels.spotify_link }}"><i class="bi bi-spotify"></i> Spotify</a></li>{% endif %}
+                    {% if profile.music_channels.applemusic_link %}<li><a href="{{ profile.music_channels.applemusic_link }}"><i class="bi bi-music-note-beamed"></i> Apple Music</a></li>{% endif %}
+                </ul>
+            </div>
+        </div>
+    </footer>
+
+{% else %}
+    <h2 class="text-center text-danger">No profile available</h2>
+    <p class="text-center">Create a profile to preview the site.</p>
+{% endif %}
+</div>
+{% endblock %}

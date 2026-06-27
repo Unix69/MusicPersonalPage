@@ -4,7 +4,10 @@ try:
     web_app = App.create_app()
     configuration = web_app.configure()
     web_app.init()
-    application = web_app.get_flask_app()
+    if not web_app.app_wsgi_mode:
+        web_app.start()
+    else:
+        application = web_app.get_flask_app()
 except Exception as e:
     # questo stampa subito eventuali errori all’avvio
     import traceback, sys

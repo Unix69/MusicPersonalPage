@@ -1,9 +1,12 @@
+import compatibility_pillow
+
+
 from admin_base import AppAdminIndexView
-from admin_views import AddressAdmin, AlbumAdmin, BoardMessageAdmin, ConcertAdmin, PageDescriptionAdmin, PlaceAdmin, ProfileAdmin, TourAdmin
+from admin_views import AddressAdmin, AlbumAdmin, BoardMessageAdmin, ConcertAdmin, PageDescriptionAdmin, PlaceAdmin, PreviewView, ProfileAdmin, TourAdmin
 from auth import AdminAuthenticator
 
 from flask import ( 
-    Flask, render_template, abort
+    Flask, flash, redirect, render_template, abort, request, url_for
 )
 
 from flask_admin import Admin
@@ -92,6 +95,7 @@ class App:
                 not_essential_cookie=not_essential_cookie
             )
 
+
     def start(self):
         self.app.run(port=8000, debug=self.app_debug_mode)
 
@@ -145,7 +149,7 @@ class App:
         self.admin_app_album_view_name = env.ADMIN_APP_ALBUM_VIEW_NAME if 0 < len(str(env.ADMIN_APP_ALBUM_VIEW_NAME)) < 64 else App.admin_app_default_album_view_name
         self.admin_app_board_message_view_name = env.ADMIN_APP_BOARD_MESSAGE_VIEW_NAME if 0 < len(str(env.ADMIN_APP_BOARD_MESSAGE_VIEW_NAME)) < 64 else App.admin_app_default_board_message_view_name
         self.admin_app_page_description_view_name = env.ADMIN_APP_PAGE_DESCRIPTION_VIEW_NAME if 0 < len(str(env.ADMIN_APP_PAGE_DESCRIPTION_VIEW_NAME)) < 64 else App.admin_app_default_page_description_view_name
-        self.app.config['ADMIN_TEMPLATE_MODE'] = self.admin_app_template_mode
+        self.app.config['ADMIN_APP_TEMPLATE_MODE'] = self.admin_app_template_mode
         self.app.config['ADMIN_APP_NAME'] = self.admin_app_name
         self.app.config['ADMIN_APP_PROFILE_VIEW_NAME'] = self.admin_app_profile_view_name
         self.app.config['ADMIN_APP_TOUR_VIEW_NAME'] = self.admin_app_tour_view_name
@@ -182,6 +186,7 @@ class App:
             index_view=AppAdminIndexView(self.admin_authenticator)
         )
 
+        self.admin.add_view(PreviewView(name="Preview", endpoint="preview"))
         self.admin.add_view(ProfileAdmin(Profile, db.session, admin_authenticator=self.admin_authenticator, app=self, name=self.admin_app_profile_view_name))
         self.admin.add_view(AlbumAdmin(Album, db.session, admin_authenticator=self.admin_authenticator, app=self, name=self.admin_app_album_view_name))
         self.admin.add_view(BoardMessageAdmin(BoardMessage, db.session, admin_authenticator=self.admin_authenticator, app=self, name=self.admin_app_board_message_view_name))
