@@ -1,0 +1,9 @@
+Flask==2.3.3
+Flask-Admin==1.6.1
+Flask-SQLAlchemy==3.0.5
+Flask-WTF==1.1.1
+Werkzeug==2.3.7
+WTForms==3.0.1
+python-dotenv==1.0.0
+email_validator==2.1.0.post1
+gunicorn

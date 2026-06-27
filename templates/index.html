@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ profile.name if profile else "Music Profile" }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Toggle menu principale
+            document.querySelectorAll('.menu-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const albumId = btn.id.replace('menuBtn','');
+                    const menu = document.getElementById('menu' + albumId);
+                    menu.classList.toggle('show');
+                    e.stopPropagation(); // impedisce al click di propagare al document
+                });
+            });
+
+            // Toggle sidebar
+            const toggle = document.querySelector('.menu-toggle-icon');
+            const sidebar = document.querySelector('.sidebar-menu');
+
+            toggle.addEventListener('click', (e) => {
+                sidebar.classList.toggle('show');
+                e.stopPropagation(); // evita che il click chiuda subito la sidebar
+            });
+
+            // Chiudi menu principale cliccando fuori
+            document.addEventListener('click', (e) => {
+                // Menu principale
+                document.querySelectorAll('.options-menu').forEach(menu => {
+                    if (!menu.contains(e.target)) {
+                        menu.classList.remove('show');
+                    }
+                });
+
+                // Sidebar
+                if (!sidebar.contains(e.target) && !toggle.contains(e.target)) {
+                    sidebar.classList.remove('show');
+                }
+            });
+
+
+
+            // Copy link
+            document.querySelectorAll('.copy-link-btn').forEach(btn => {
+                btn.addEventListener('click', e => {
+                    e.preventDefault();
+                    const url = btn.dataset.url;
+                    navigator.clipboard.writeText(url)
+                        .then(() => {
+                            const tooltip = btn.parentElement.querySelector('.copy-tooltip');
+                            tooltip.style.display = 'inline';
+                            setTimeout(() => { tooltip.style.display = 'none'; }, 1500);
+                        })
+                        .catch(err => console.error('Unable to copy link: ', err));
+                });
+            });
+
+            // Share popup
+            document.querySelectorAll('.share-btn').forEach(btn => {
+                btn.addEventListener('click', e => {
+                    e.preventDefault();
+
+                    const popup = btn.parentElement.querySelector('.share-popup');
+                    const isVisible = popup.style.display === 'block';
+
+                    // Chiudi tutti gli altri popup
+                    document.querySelectorAll('.share-popup').forEach(p => p.style.display = 'none');
+
+                    // Mostra/nascondi popup corrente
+                    popup.style.display = isVisible ? 'none' : 'block';
+
+                    if (!isVisible) {
+                        const url = encodeURIComponent(btn.dataset.url);
+                        const text = encodeURIComponent(btn.dataset.text || 'Check this album!');
+                        const title = encodeURIComponent(btn.dataset.title || 'Album');
+
+                        // Aggiorna i link social
+                        popup.querySelector('.twitter').href = `https://twitter.com/intent/tweet?text=${text}&url=${url}`;
+                        popup.querySelector('.facebook').href = `https://www.facebook.com/sharer/sharer.php?u=${url}`;
+                        popup.querySelector('.whatsapp').href = `https://wa.me/?text=${text}%20${url}`;
+                        popup.querySelector('.instagram').href = `https://www.instagram.com/?url=${url}`;
+                        popup.querySelector('.tiktok').href = `https://www.tiktok.com/upload?url=${url}`;
+                    }
+                });
+            });
+
+            // Chiudi popup cliccando fuori
+            document.addEventListener('click', e => {
+                document.querySelectorAll('.share-popup').forEach(popup => {
+                    if (!popup.contains(e.target) && !e.target.classList.contains('share-btn')) {
+                        popup.style.display = 'none';
+                    }
+                });
+            });
+
+
+        });
+    </script>
+</head>
+<body>
+    <div class="header-cover">
+    {% if profile %}
+        <div class="profile-bar d-flex justify-content-between align-items-center">
+            <div class="sidebar-menu" id="sidebarMenu">
+                <ul>
+                    <li><a href="#albums">Albums</a></li>
+                    <li><a href="#tours">Tours</a></li>
+                    <li><a href="#news">News</a></li>
+                    <li><a href="#contacts">Contacts</a></li>
+                </ul>
+            </div>
+            <button class="menu-toggle" onclick="document.getElementById('sidebarMenu').classList.toggle('show')">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="bi bi-music-note-list menu-toggle-icon" viewBox="0 0 16 16">
+                    <path d="M12 13c0 1.105-1.12 2-2.5 2S7 14.105 7 13s1.12-2 2.5-2 2.5.895 2.5 2"/>
+                    <path fill-rule="evenodd" d="M12 3v10h-1V3z"/>
+                    <path d="M11 2.82a1 1 0 0 1 .804-.98l3-.6A1 1 0 0 1 16 2.22V4l-5 1z"/>
+                    <path fill-rule="evenodd" d="M0 11.5a.5.5 0 0 1 .5-.5H4a.5.5 0 0 1 0 1H.5a.5.5 0 0 1-.5-.5m0-4A.5.5 0 0 1 .5 7H8a.5.5 0 0 1 0 1H.5a.5.5 0 0 1-.5-.5m0-4A.5.5 0 0 1 .5 3H8a.5.5 0 0 1 0 1H.5a.5.5 0 0 1-.5-.5"/>
+                </svg>
+            </button>
+            <div class="profile-name fw-bold">
+                {{ profile.name }}
+            </div>
+            
+            
+            <div class="profile-contacts d-flex gap-3">
+                {% if profile.music_channels and profile.music_channels.spotify_link %}
+                <a href="{{ profile.music_channels.spotify_link }}" target="_blank" class="social-link">
+                    <img src="{{ url_for('static', filename='icons/spotify.svg') }}" alt="Spotify" class="social-icon">
+                </a>
+                {% endif %}
+
+                {% if profile.music_channels and profile.music_channels.youtube_link %}
+                <a href="{{ profile.music_channels.youtube_link }}" target="_blank" class="social-link">
+                    <img src="{{ url_for('static', filename='icons/youtube.svg') }}" alt="YouTube" class="social-icon">
+                </a>
+                {% endif %}
+
+                {% if profile.music_channels and profile.music_channels.applemusic_link %}
+                <a href="{{ profile.music_channels.applemusic_link }}" target="_blank" class="social-link">
+                    <img src="{{ url_for('static', filename='icons/apple.svg') }}" alt="Apple Music" class="social-icon">
+                </a>
+                {% endif %}
+
+                {% if profile.socials and profile.socials.facebook_link %}
+                <a href="{{ profile.socials.facebook_link }}" target="_blank" class="social-link">
+                    <img src="{{ url_for('static', filename='icons/facebook.svg') }}" alt="Facebook" class="social-icon">
+                </a>
+                {% endif %}
+                
+                {% if profile.socials and profile.socials.instagram_link %}
+                <a href="{{ profile.socials.instagram_link }}" target="_blank" class="social-link">
+                    <img src="{{ url_for('static', filename='icons/instagram.svg') }}" alt="Instagram" class="social-icon">
+                </a>
+                {% endif %}
+
+                {% if profile.contact and profile.contact.email %}
+                <a href="mailto:{{ profile.contact.email }}" class="contact-link" title="Email">
+                    <img src="{{ url_for('static', filename='icons/email.svg') }}" alt="Email" class="contact-icon">
+                </a>
+                {% endif %}
+                {% if profile.contact and profile.contact.phone %}
+                <a href="tel:{{ profile.contact.phone }}" class="contact-link" title="Phone">
+                    <img src="{{ url_for('static', filename='icons/phone.svg') }}" alt="Phone" class="contact-icon">
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    {% endif %}
+    </div>
+
+
+
+        <div class="id-container" style="margin-top:0;">
+            
+            {% if profile %}
+            <!-- Immagine profilo e Bio -->
+            <div class="row mb-4 g-3" style="margin-top:0; padding-top:0;">
+                <div class="profile-bio-container">
+                    <!-- Bio a sinistra -->
+                    <div class="profile-bio">
+                        <h3>About the Artist</h3>
+                        <p>{{ profile.bio }}</p>
+                    </div>
+
+                    <!-- Immagine a destra -->
+                    <div class="profile-img">
+                        <img src="{{ url_for('static', filename='images/profile/' + profile.profile_image) }}" 
+                            alt="Profile Image">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="sections-card">
+            <!-- Page Description -->
+            {% if page_description %}
+            <div class="mb-4 page-description-container">
+                <h2><strong>Page Description</strong></h2>
+                <p>{{ page_description.content }}</p>
+            </div>
+            {% endif %}
+
+            <!-- Albums Section -->
+            <div id="albums" class="albums-card">
+                <h2><strong>Albums</strong></h2>
+                <p>This section presents all of her published albums. Each recording includes a description and can be listened to through Spotify, YouTube, or Apple Music. Albums are also available for sharing with friends and followers.</p>
+                <div class="albums-scroll accordion" id="albumsAccordion">
+                    {% for album in albums %}
+                    <div class="album-wrapper mb-3">
+                        <div class="accordion-item album-card mb-3" id="album{{ album.id }}">
+                            <div class="d-flex align-items-center">
+                                <h2 class="accordion-header flex-grow-1" id="albumHeading{{ loop.index }}">
+                                    <button class="accordion-button collapsed p-2" type="button" data-bs-toggle="collapse" 
+                                            data-bs-target="#albumCollapse{{ loop.index }}" 
+                                            aria-expanded="false" aria-controls="albumCollapse{{ loop.index }}">
+                                        {% if album.cover_image %}
+                                        <img src="{{ url_for('static', filename='images/album/' + album.cover_image) }}" 
+                                            class="album-cover me-3" alt="{{ album.name }}">
+                                        {% endif %}
+                                        <div class="album-cover-name">{{ album.name }}</div>
+                                    </button>
+                                </h2>
+                            </div>
+                            <div id="albumCollapse{{ loop.index }}" class="accordion-collapse collapse" 
+                                aria-labelledby="albumHeading{{ loop.index }}" data-bs-parent="#albumsAccordion">
+                                <div class="accordion-body d-flex justify-content-between align-items-center flex-wrap">
+                                    <div class="card mb-4 shadow-sm album-collapsed">
+                                        <div class="row g-0 align-items-start">
+
+                                            <!-- Colonna sinistra: immagine album -->
+                                            <div class="col-md-3 p-3 d-flex align-items-start">
+                                                {% if album.cover_image %}
+                                                <img src="{{ url_for('static', filename='images/album/' + album.cover_image) }}" alt="{{ album.name }}" class="img-fluid rounded shadow-sm">
+                                                {% endif %}
+                                            </div>
+
+                                            <!-- Colonna destra: titolo, descrizione, link -->
+                                            <div class="col-md-7 p-3">
+                                                <h5 class="album-title">{{ album.name }}</h5>
+
+                                                <!-- Descrizione -->
+                                                <p class="card-text mb-2">
+                                                    <img src="{{ url_for('static', filename='icons/description.svg') }}" 
+                                                        style="margin-right: 10px;" 
+                                                        alt="Description Icon" width="18" height="18">
+                                                    {{ album.description }}
+                                                </p>
+
+                                                <!-- Link ai servizi di streaming (orizzontali a destra) -->
+                                                <div class="d-flex justify-content-end gap-2">
+                                                    {% if album.spotify_link %}
+                                                    <a class="btn btn-outline-primary btn-sm" href="{{ album.spotify_link }}" target="_blank">Spotify</a>
+                                                    {% endif %}
+                                                    {% if album.youtube_link %}
+                                                    <a class="btn btn-outline-danger btn-sm" href="{{ album.youtube_link }}" target="_blank">YouTube</a>
+                                                    {% endif %}
+                                                    {% if album.applemusic_link %}
+                                                    <a class="btn btn-outline-success btn-sm" href="{{ album.applemusic_link }}" target="_blank">Apple Music</a>
+                                                    {% endif %}
+                                                </div>
+                                            
+                                            </div>
+
+                                            <div class="col-md-2 text-end p-3" style="position: relative;">
+                                                <!-- Bottone menu -->
+                                                <button style="background-color: transparent;" class="btn btn-light menu-btn" id="menuBtn{{ album.id }}">
+                                                    <i class="bi bi-three-dots-vertical"></i>
+                                                </button>
+
+                                                <!-- Menu opzioni personalizzato -->
+                                                <div class="options-menu" id="menu{{ album.id }}">
+                                                    <a href="#" class="share-btn" 
+                                                    data-url="{{ request.url_root }}album/{{ album.id }}" 
+                                                    data-title="{{ album.name }}" 
+                                                    data-text="Check out this album!">Share
+                                                    </a>
+                                                    <a href="#" class="copy-link-btn" 
+                                                    data-url="{{ request.url_root }}album/{{ album.id }}">Copy link</a>
+                                                    <span class="copy-tooltip" style="display:none;">Copied!</span>
+
+                                                    <!-- Sottomenu share -->
+                                                    <div class="share-popup">
+                                                        <a href="#" class="social-link twitter" target="_blank">Twitter</a><br>
+                                                        <a href="#" class="social-link facebook" target="_blank">Facebook</a><br>
+                                                        <a href="#" class="social-link whatsapp" target="_blank">WhatsApp</a><br>
+                                                        <a href="#" class="social-link instagram" target="_blank">Instagram</a><br>
+                                                        <a href="#" class="social-link tiktok" target="_blank">TikTok</a>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+                </div>
+            </div>
+
+            <!-- Tours Section -->
+            <div id="tours" class="tours-card">
+                <h2><strong>Tours</strong></h2>
+                <p>Here visitors can explore all her concert tours. Each tour provides details about every stop: dates, cities, venues, and countries visited. It is also possible to check ticket availability, plan attendance, and revisit the roadmaps of past tours.</p>
+                <div class="tours-scroll accordion" id="toursAccordion">
+                {% for tour in tours %}
+                    <div class="accordion-item mb-3">
+                        <div class="d-flex flex-grow-1 align-items-center">
+                            <button class="accordion-button collapsed d-flex justify-content-between align-items-center px-3 py-2 w-100 tour-card"
+                                        type="button" 
+                                        data-bs-toggle="collapse" 
+                                        data-bs-target="#tourCollapse{{ loop.index }}" 
+                                        aria-expanded="false" 
+                                        aria-controls="tourCollapse{{ loop.index }}">
+
+                                    <!-- LEFT: year (4 spazi) + tour name (8 spazi) -->
+                                    <div class="d-flex text-start me-3">
+                                        <span>
+                                            {% set start_year = tour.tour_schedule.startdate.year if tour.tour_schedule and tour.tour_schedule.startdate else None %}
+                                            {% set end_year = tour.tour_schedule.enddate.year if tour.tour_schedule and tour.tour_schedule.enddate else None %}
+
+                                            {% if start_year and end_year %}
+                                                {% if start_year == end_year %}
+                                                    {{ start_year }}
+                                                {% else %}
+                                                    {{ start_year }}/{{ end_year }}
+                                                {% endif %}
+                                            {% elif start_year %}
+                                                from {{ start_year }}
+                                            {% elif end_year %}
+                                                until {{ end_year }}
+                                            {% else %}
+                                                N/A
+                                            {% endif %}
+                                        </span>
+
+                                        <span class="tour-name">{{ tour.name }}</span>
+                                    </div>
+
+                                    <!-- CENTER: tour description -->
+                                    <div class="flex-grow-1 text-center mx-3">
+                                        <div class="text-muted text-truncate d-block" style="max-width: 100%;">
+                                            {{ tour.description | truncate(50, True, '...') }}
+                                        </div>
+                                    </div>
+
+
+                                    <!-- RIGHT: icon + countries + stops -->
+                                    <div class="d-flex align-items-center gap-2 text-muted small ms-auto me-4">
+                                        <img src="{{ url_for('static', filename='icons/location.svg') }}" alt="Location Icon" width="16" height="16">
+
+                                        {% if tour.concerts %}
+                                            {% set countries = tour.concerts
+                                                | map(attribute='place')
+                                                | select
+                                                | map(attribute='address')
+                                                | select
+                                                | map(attribute='country')
+                                                | select
+                                                | list %}
+
+                                            {% if countries %}
+                                                {% set unique_countries = [] %}
+                                                {% for c in countries if c not in unique_countries %}
+                                                    {% set _ = unique_countries.append(c) %}
+                                                {% endfor %}
+
+                                                {% set preview = unique_countries[:3] %}
+                                                <span style="margin-left: 0.5rem;">
+                                                    {{ preview | join(', ') }}
+                                                    {% if unique_countries|length > 3 %} ...{% endif %}
+                                                </span>
+                                            {% endif %}
+
+                                            <span style="margin-left: 0.5rem;">{{ tour.concerts|length }} Stops</span>
+                                        {% endif %}
+                                    </div>
+
+                            </button>
+                        </div>
+
+                        <!-- Accordion Body -->
+                        <div id="tourCollapse{{ loop.index }}" class="accordion-collapse collapse" 
+                            aria-labelledby="tourHeading{{ loop.index }}" data-bs-parent="#toursAccordion">
+                            <div class="accordion-body">
+                                {% set start_date = tour.tour_schedule.startdate.strftime('%d/%m/%Y') if tour.tour_schedule and tour.tour_schedule.startdate else 'N/A' %}
+                                {% set end_date = tour.tour_schedule.enddate.strftime('%d/%m/%Y') if tour.tour_schedule and tour.tour_schedule.enddate else 'N/A' %}
+
+                                <div class="d-flex justify-content-between">
+                                    <!-- LEFT: date e descrizione stacked vertical -->
+                                    <div class="d-flex flex-column" style="flex: 0 0 60%;">
+                                        <!-- Date -->
+                                        <div class="fw-bold mb-2">
+                                            <span style="min-width: 8ch; font-size: 18px;">{{ tour.name }}</span>
+                                        </div>
+
+                                        <!-- Descrizione -->
+                                        <div class="mb-2">
+                                            <p class="mb-0 text-truncate" style="white-space: normal;">{{ tour.description }}</p>
+                                        </div>
+
+                                        <div style="margin-top: 24px;" class="mb-2">
+                                            <img src="{{ url_for('static', filename='icons/calendar.svg') }}" alt="Calendar Icon" width="16" height="16"> {{ start_date }} - {{ end_date }}
+                                        </div>
+
+                                        <div class="d-flex flex-wrap gap-2" style="margin-top: 12px;">
+                                            <img src="{{ url_for('static', filename='icons/location.svg') }}" alt="Location Icon" width="16" height="16"> <strong>Road Map</strong>
+                                        </div>
+                                    </div>
+
+                                    <!-- RIGHT: città, info extra, ticket stacked vertical -->
+                                    <div class="d-flex flex-column text-end" style="flex: 0 0 35%; margin-top: 32px;">
+                                        <!-- Città per country -->
+                                        {% if tour.concerts %}
+                                            {% set country_cities = {} %}
+                                            {% for concert in tour.concerts %}
+                                                {% if concert.place and concert.place.address %}
+                                                    {% set country = concert.place.address.country %}
+                                                    {% set city = concert.place.address.city %}
+                                                    {% set province = concert.place.address.province %}
+                                                    {% if country and city and province %}
+                                                        {% if country not in country_cities %}
+                                                            {% set _ = country_cities.update({country: []}) %}
+                                                        {% endif %}
+                                                        {% if (city, province) not in country_cities[country] %}
+                                                            {% set _ = country_cities[country].append((city, province)) %}
+                                                        {% endif %}
+                                                    {% endif %}
+                                                {% endif %}
+                                            {% endfor %}
+
+                                            {% for country, cities in country_cities.items() %}
+                                                <span class="d-block"><strong>{{ country }}:</strong>
+                                                    {% for city, province in cities %}
+                                                        {{ city }} ({{ province }}){% if not loop.last %}, {% endif %}
+                                                    {% endfor %}
+                                                </span>
+                                            {% endfor %}
+                                        {% endif %}
+
+                                        <!-- Info extra -->
+                                        {% if tour.concerts %}
+                                            <div class="mb-1" style="margin-top: 64px; align-self: flex-end;">
+                                                <!-- Numero totale di concerti e locali -->
+                                                {% set unique_venues = tour.concerts | map(attribute='place') | select | map(attribute='venue') | select | unique | list %}
+                                                <span class="d-block mt-1 medio text-muted">{{ tour.concerts|length }} Stops, {{ unique_venues|length }} Venues</span>               
+                                                
+
+                                                <!-- Numero medio di concerti per country e region -->
+                                                {% set country_counts = {} %}
+                                                {% set region_counts = {} %}
+
+                                                {% for concert in tour.concerts %}
+                                                    {% if concert.place and concert.place.address %}
+                                                        {% set country = concert.place.address.country %}
+
+                                                        {% if country %}
+                                                            {% if country not in country_counts %}
+                                                                {% set _ = country_counts.update({country: 0}) %}
+                                                            {% endif %}
+                                                            {% set _ = country_counts.update({country: country_counts[country] + 1}) %}
+                                                        {% endif %}
+                                                    {% endif %}
+                                                {% endfor %}
+
+                                                {% if country_counts %}
+                                                    {% set avg_country = (tour.concerts|length / country_counts|length) | round(0, 'ceil') %}
+                                                    <span class="d-block mt-1 small text-muted">{{ avg_country | int }} stops per country</span>
+                                                {% endif %}
+                                            </div>
+                                            
+                                        {% endif %}
+
+                                        {% set has_ticket_online = tour.concerts
+                                            | selectattr('ticket')
+                                            | selectattr('ticket.ticket_link')         
+                                            | list
+                                            | length > 0
+                                        %}
+
+                                        {% if has_ticket_online %}
+                                            <div style="display:inline-block; margin-right:0.5rem;">
+                                                <span class="badge bg-success" style="font-size:0.75rem; padding:0.25em 0.4em;">Online Tickets</span>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <!-- Lista concerti -->
+                                {% if tour.concerts %}
+                                <ul class="list-group list-group-flush mt-3">
+                                    {% for concert in tour.concerts %}
+                                    <li style="background: transparent;" class="list-group-item d-flex mb-3">
+                                        <div class="ps-3 flex-grow-1">
+                                            <ul class="list-unstyled mb-0">
+                                                <li>
+                                                    <strong>
+                                                        {{ concert.place.address.city }}
+                                                        {{ concert.concert_schedule.date.strftime('%d/%m/%Y') if concert.concert_schedule.date else '' }}
+                                                        {% if concert.concert_schedule.starttime %} {{ concert.concert_schedule.starttime.strftime('%H:%M') }}{% endif %}
+                                                    </strong>
+                                                </li>
+                                                <li class="mt-1">
+                                                    <span class="badge bg-warning me-2">Place</span>
+                                                    {{ concert.place.venue }}, 
+                                                    {{ concert.place.address.city }} 
+                                                    {{ concert.place.address.street }}
+                                                    {{ concert.place.address.nr }}     
+                                                    {{ concert.place.address.country }}  
+                                                    <img src="{{ url_for('static', filename='icons/location.svg') }}" alt="Location Icon" width="16" height="16">
+                                                </li>
+                                            </ul>
+                                        </div>
+                                        <div class="d-flex align-items-center justify-content-end ms-auto">
+                                            <span class="badge bg-success me-2">Ticket</span>
+                                            {% if concert.ticket.ticket_link %}
+                                                <a href="{{ concert.ticket.ticket_link }}" target="_blank" class="btn btn-sm btn-outline-primary" title="Ticket Link">
+                                                    BuyTicket
+                                                </a>
+                                            {% elif concert.ticket.is_free %}
+                                                <span class="text-muted">Free</span>
+                                            {% endif %}
+                                        </div>
+                                    </li>
+                                    {% endfor %}
+                                </ul>
+                                {% else %}
+                                <p class="text-muted">No stops defined for this tour.</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+                </div>
+                
+                {% set countries = [] %}
+                {% set cities = [] %}
+
+                {% for tour in tours %}
+                {% if tour.concerts %}
+                    {% for concert in tour.concerts %}
+                    {% if concert.place.address.country not in countries %}
+                        {% set _ = countries.append(concert.place.address.country) %}
+                        {% set _ = cities.append(concert.place.address.city) %}
+                    {% endif %}
+                    {% endfor %}
+                {% endif %}
+                {% endfor %}
+
+                {% if countries %}
+                <p class="text-muted mb-3">
+                    Performed in 
+                    <strong>{{ cities|length }}</strong> 
+                    {{ "different cities" if cities|length > 1 else "city" }}
+                    and 
+                    <strong>{{ countries|length }}</strong> 
+                    {{ "different countries" if countries|length > 1 else "country" }} (
+                    {% for country in countries %}
+                    {{ country }}
+                    <img style="background-color: transparent;" src="https://flagcdn.com/16x12/{{ country[:2]|lower }}.png" 
+                        alt="{{ country }} flag" 
+                        class="me-2" width="20" height="15">)
+                    {% endfor %}
+                </p>
+                {% else %}
+                <p class="text-muted">No concerts registered for any tour.</p>
+                {% endif %}
+                </div>
+            </div>
+
+
+           
+
+            <!-- Info News -->
+            <div id="news" class="news">
+                <h2><strong>News</strong></h2>
+                <p style="margin-top: 24px;">This section features the latest news, announcements, and personal messages from the artist. It keeps the audience informed about upcoming events, new recordings, and behind-the-scenes insights.</p>
+                <div class="board-container">
+                    {% for msg in board_messages %}
+                    <div class="board-message">
+                        <div class="board-message-date">[{{ msg.created_at.strftime('%d/%m/%Y %H:%M') }}]</div>
+                        <div class="board-message-content">{{ msg.content }}</div>
+                    </div>
+                    {% else %}
+                    <p class="text-muted">No messages in the board yet.</p>
+                    {% endfor %}
+                </div>
+            </div>
+
+
+
+
+            <footer id="contacts" class="site-footer">
+                <p style="text-align: center; margin-top: 24px; margin-bottom: 36px;">All official contact details can be found here. Visitors may reach out via email or phone for artistic collaborations, invitations, or inquiries. Official social media channels are also provided to stay connected.<p>
+                <!-- Riga 1: Contenuto -->
+                <div class="footer-grid">
+                    <!-- Colonna sinistra -->
+                    <div class="footer-left">
+                    <!-- Riga 1: Immagine profilo -->
+                    <img src="{{ url_for('static', filename='images/profile/' + profile.profile_image) }}" alt="Profilo" class="profile-pic">
+
+                    <!-- Riga 2: Telefono + Email -->
+                    <div class="footer-contacts">
+                        <a href="tel:+391234567890" class="footer-contact">
+                            <i class="bi bi-telephone"></i>
+                            <span>{{ profile.contact.phone }}</span>
+                        </a>
+                        <a href="mailto:email@example.com" class="footer-contact">
+                            <i class="bi bi-envelope"></i>
+                            <span>{{ profile.contact.email }}</span>
+                        </a>
+                    </div>
+                    </div>
+
+                    <!-- Colonna destra: Social -->
+                    <div class="footer-right">
+                    <ul class="social-links">
+                        <li><a href="{{ profile.socials.facebook_link }}" target="_blank"><i class="bi bi-facebook"></i> Facebook</a></li>
+                        <li><a href="{{ profile.socials.instagram_link }}" target="_blank"><i class="bi bi-instagram"></i> Instagram</a></li>
+                        <li><a href="{{ profile.socials.youtube_link }}" target="_blank"><i class="bi bi-youtube"></i> YouTube</a></li>
+                        <li><a href="{{ profile.socials.spotify_link }}" target="_blank"><i class="bi bi-spotify"></i> Spotify</a></li>
+                        <li><a href="{{ profile.socials.applemusic_link }}" target="_blank"><i class="bi bi-music-note-beamed"></i> Apple Music</a></li>
+                    </ul>
+                    </div>
+                </div>
+                <!-- Riga 2: Licenza -->
+                <div class="footer-license">
+                    © {{ app_license }}
+                </div>
+            </footer>
+
+
+            {% else %}
+            <h2 class="text-center text-danger">Page Not Found</h2>
+            <p class="text-center">Nessun profilo disponibile. Crea prima un profilo per visualizzare la home.</p>
+            {% endif %}
+        </div>
+
+        <script>
+            // --- Funzione per leggere i cookie ---
+            function getCookie(name) {
+                const value = `; ${document.cookie}`;
+                const parts = value.split(`; ${name}=`);
+                if (parts.length === 2) return parts.pop().split(';').shift();
+                return null;
+            }
+
+            // --- Mostra/Nascondi banner al caricamento ---
+            document.addEventListener("DOMContentLoaded", () => {
+                const banner = document.getElementById("cookie-banner");
+                const warning = document.getElementById("warning-msg");
+
+                const consent = getCookie("essential_cookie"); // cookie lato client per nascondere banner
+                if (consent) {
+                    banner.style.display = "none";
+                    banner.style.visibility = "false";
+                } else {
+                    banner.style.display = "flex";
+                    banner.style.visibility = "true";
+                }
+
+                // Gestione toggle essential / not essential
+                const essentialToggle = document.getElementById("essential");
+                const notEssentialToggle = document.getElementById("not_essential");
+
+                essentialToggle.addEventListener("change", () => {
+                    if (!essentialToggle.checked) {
+                        warning.style.display = "block"; // mostra avviso se rifiuti essential
+                    } else {
+                        warning.style.display = "none";
+                    }
+                });
+            });
+
+            // --- Salva consenso ---
+            function saveConsent() {
+                const essential = document.getElementById("essential").checked;
+                const notEssential = document.getElementById("not_essential").checked;
+
+                // Verifica lato client che essential sia accettato
+                if (!essential) {
+                    alert("Non puoi procedere senza accettare gli essential cookies!");
+                    return;
+                }
+
+                // Invio al server
+                fetch("/set_cookie", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ essential, not_essential: notEssential })
+                })
+                .then(response => {
+                    if (!response.ok) throw new Error("Errore salvataggio consenso");
+                    return response.json();
+                })
+                .then(data => {
+                    // Salva cookie lato client per nascondere banner al reload
+                    document.cookie = `cookie_consent=true; path=/; max-age=${60*60*24*365}`;
+                    // Nascondi banner
+                    document.getElementById("cookie-banner").style.display = "none";
+                    console.log("Consent saved:", data);
+                })
+                .catch(err => console.error(err));
+            }
+
+        </script>
+
+        <div id="cookie-banner">
+            <div>This website use essential and not essential cookies. Read more about them and decide if accept or not</div>
+            <div style="width:100%; max-width:800px; height:350px; overflow-y:scroll; border:1px solid #ccc; padding:15px; border-radius:8px; background:#fafafa;">
+                <p><strong>Privacy & Data Protection Policy</strong></p>
+
+                <p>This website respects the rights of individuals in accordance with the 
+                <a href="https://gdpr-info.eu/" target="_blank" rel="noopener noreferrer">General Data Protection Regulation (GDPR)</a>.</p>
+
+                <p><strong>1. Data Collection</strong><br>
+                This website does not collect, store, or process any personal data of visitors. 
+                Browsing the website does not require registration and does not involve the transmission of personal information. 
+                The only data subject to processing is the administrator of the platform.</p>
+
+                <p><strong>2. Types of Data Processed</strong><br>
+                The website uses a secure <em>SQLite</em> database that stores the following categories of data:<br>
+                – Artist’s stage name<br>
+                – Concert schedules (dates, venues, and related details)<br>
+                – Tours (cities, countries, itineraries)<br>
+                – Albums (titles, descriptions, and distribution links)<br>
+                – Contact details (telephone numbers, email addresses, official social media links)<br>
+                These items are considered personal or sensitive data under the GDPR insofar as they may identify or be linked to a natural person.</p>
+
+                <p><strong>3. Purpose of Processing</strong><br>
+                Data is processed exclusively for the purpose of publishing artistic content, 
+                such as concert information, tours, albums, and contact details. 
+                No commercial profiling, targeted marketing, or sale of data is performed.</p>
+
+                <p><strong>4. Data Controller</strong><br>
+                The administrator of the platform is the sole Data Controller and ensures lawful, fair, and transparent processing of all data.</p>
+
+                <p><strong>5. Data Retention</strong><br>
+                Data is retained only as long as necessary for artistic and informational purposes. 
+                It may be updated or deleted upon request by the artist or when no longer relevant.</p>
+
+                <p><strong>6. Cookies</strong><br>
+                This website uses cookies to ensure proper functionality:<br>
+                – <strong>Essential cookies</strong>: strictly necessary for technical operation (e.g. navigation, secure access). 
+                Acceptance of these cookies does not identify or register visitors in any way.<br>
+                – <strong>Technical cookies</strong>: support improved browsing and user experience. 
+                Acceptance of these cookies has no negative consequence for visitors.<br>
+                – <strong>Non-essential cookies</strong>: the website does not use cookies for analytics, marketing, or tracking purposes.<br>
+                More information on cookies can be found on the official 
+                <a href="https://ec.europa.eu/info/cookies_en" target="_blank" rel="noopener noreferrer">European Commission Cookies Policy</a>.</p>
+
+                <p><strong>7. User Rights</strong><br>
+                Visitors are not subject to any personal data processing under GDPR. 
+                The administrator, as the sole data subject, retains all rights granted by GDPR, 
+                including access, rectification, erasure, and restriction of processing.</p>
+
+                <p><strong>8. Security</strong><br>
+                Appropriate technical and organizational measures are in place to ensure the integrity and security of the SQLite database. 
+                Data is not shared with third parties.</p>
+
+                <p><em>For further details on your rights, please refer to the 
+                <a href="https://gdpr-info.eu/art-12-gdpr/" target="_blank" rel="noopener noreferrer">GDPR Articles 12–23</a>.</em></p>
+            </div>
+            <div class="toggle-group">
+            <label class="toggle">
+                <input type="checkbox" id="essential" checked>
+                Essential cookies (obbligatori)
+            </label>
+            <label class="toggle">
+                <input type="checkbox" id="not_essential">
+                Not-essential cookies
+            </label>
+            </div>
+
+            <button class="proceed-btn" onclick="saveConsent()">Proceed</button>
+
+            <div class="warning" id="warning-msg">
+                ⚠️ This site could not run correctly if you do not accept essental cookies.
+            </div>
+        </div>
+        
+    </body>
+</html>
